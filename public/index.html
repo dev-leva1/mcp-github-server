@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP GitHub API Client</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .panel {
+      flex: 1;
+      min-width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 100px;
+      font-family: monospace;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: 400px;
+    }
+    .error {
+      color: red;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MCP GitHub API Client</h1>
+  
+  <div class="container">
+    <div class="panel">
+      <h2>Запросы</h2>
+      
+      <div class="form-group">
+        <label for="endpoint">Выберите эндпоинт:</label>
+        <select id="endpoint">
+          <option value="GET:/api/repos/{username}">Получить репозитории пользователя</option>
+          <option value="GET:/api/repos/{username}/{repo}">Получить информацию о репозитории</option>
+          <option value="GET:/api/repos/{username}/{repo}/contents/{path}">Получить содержимое файла</option>
+          <option value="POST:/api/repos">Создать репозиторий</option>
+          <option value="POST:/api/repos/{username}/{repo}/contents/{path}">Создать файл</option>
+          <option value="GET:/api/repos/{username}/{repo}/branches">Получить ветки репозитория</option>
+          <option value="POST:/api/repos/{username}/{repo}/branches">Создать ветку</option>
+          <option value="GET:/api/repos/{username}/{repo}/commits">Получить коммиты</option>
+          <option value="POST:/api/repos/{username}/{repo}/commits">Создать коммит</option>
+        </select>
+      </div>
+      
+      <div id="params-container" class="form-group">
+        <!-- Динамические параметры будут добавлены здесь -->
+      </div>
+      
+      <div id="body-container" class="form-group" style="display: none;">
+        <label for="request-body">Тело запроса (JSON):</label>
+        <textarea id="request-body"></textarea>
+      </div>
+      
+      <button id="send-request">Отправить запрос</button>
+    </div>
+    
+    <div class="panel">
+      <h2>Результат</h2>
+      <pre id="result">Здесь будет отображен результат запроса...</pre>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const endpointSelect = document.getElementById('endpoint');
+      const paramsContainer = document.getElementById('params-container');
+      const bodyContainer = document.getElementById('body-container');
+      const requestBodyTextarea = document.getElementById('request-body');
+      const sendRequestButton = document.getElementById('send-request');
+      const resultPre = document.getElementById('result');
+      
+      // Шаблоны тел запросов
+      const requestBodyTemplates = {
+        'POST:/api/repos': JSON.stringify({
+          name: 'test-repo',
+          description: 'Тестовый репозиторий',
+          private: false
+        }, null, 2),
+        'POST:/api/repos/{username}/{repo}/contents/{path}': JSON.stringify({
+          content: 'Содержимое файла',
+          message: 'Добавлен новый файл'
+        }, null, 2),
+        'POST:/api/repos/{username}/{repo}/branches': JSON.stringify({
+          name: 'feature-branch',
+          sha: null
+        }, null, 2),
+        'POST:/api/repos/{username}/{repo}/commits': JSON.stringify({
+          message: 'Добавлены новые файлы',
+          branch: 'master',
+          changes: {
+            'file1.txt': 'Содержимое файла 1',
+            'dir/file2.txt': 'Содержимое файла 2'
+          }
+        }, null, 2)
+      };
+      
+      // Обработчик изменения эндпоинта
+      endpointSelect.addEventListener('change', updateParamsAndBody);
+      
+      // Инициализация при загрузке страницы
+      updateParamsAndBody();
+      
+      // Обработчик отправки запроса
+      sendRequestButton.addEventListener('click', sendRequest);
+      
+      // Функция обновления параметров и тела запроса
+      function updateParamsAndBody() {
+        const selectedEndpoint = endpointSelect.value;
+        const [method, path] = selectedEndpoint.split(':');
+        
+        // Очищаем контейнер параметров
+        paramsContainer.innerHTML = '';
+        
+        // Извлекаем параметры пути из эндпоинта
+        const pathParams = path.match(/\{([^}]+)\}/g) || [];
+        
+        // Добавляем поля для параметров пути
+        pathParams.forEach(param => {
+          const paramName = param.replace(/[{}]/g, '');
+          addParamField(paramName);
+        });
+        
+        // Показываем или скрываем контейнер тела запроса в зависимости от метода
+        if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+          bodyContainer.style.display = 'block';
+          
+          // Устанавливаем шаблон тела запроса, если он существует
+          if (requestBodyTemplates[selectedEndpoint]) {
+            requestBodyTextarea.value = requestBodyTemplates[selectedEndpoint];
+          } else {
+            requestBodyTextarea.value = '{}';
+          }
+        } else {
+          bodyContainer.style.display = 'none';
+        }
+      }
+      
+      // Функция добавления поля для параметра
+      function addParamField(paramName) {
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+        
+        const label = document.createElement('label');
+        label.setAttribute('for', `param-${paramName}`);
+        label.textContent = `${paramName}:`;
+        
+        const input = document.createElement('input');
+        input.setAttribute('type', 'text');
+        input.setAttribute('id', `param-${paramName}`);
+        input.setAttribute('data-param', paramName);
+        
+        formGroup.appendChild(label);
+        formGroup.appendChild(input);
+        paramsContainer.appendChild(formGroup);
+      }
+      
+      // Функция отправки запроса
+      async function sendRequest() {
+        try {
+          resultPre.textContent = 'Отправка запроса...';
+          
+          const selectedEndpoint = endpointSelect.value;
+          const [method, pathTemplate] = selectedEndpoint.split(':');
+          
+          // Собираем значения параметров
+          const paramInputs = paramsContainer.querySelectorAll('input[data-param]');
+          const params = {};
+          
+          paramInputs.forEach(input => {
+            const paramName = input.getAttribute('data-param');
+            params[paramName] = input.value;
+          });
+          
+          // Заменяем параметры в пути
+          let path = pathTemplate;
+          for (const [key, value] of Object.entries(params)) {
+            path = path.replace(`{${key}}`, value);
+          }
+          
+          // Подготавливаем опции запроса
+          const options = {
+            method,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          };
+          
+          // Добавляем тело запроса для методов, которые его поддерживают
+          if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+            try {
+              options.body = requestBodyTextarea.value;
+            } catch (e) {
+              resultPre.textContent = `Ошибка в формате JSON: ${e.message}`;
+              return;
+            }
+          }
+          
+          // Отправляем запрос
+          const response = await fetch(path, options);
+          const data = await response.json();
+          
+          // Отображаем результат
+          resultPre.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          resultPre.textContent = `Ошибка: ${error.message}`;
+        }
+      }
+    });
+  </script>
+</body>
+</html> 
