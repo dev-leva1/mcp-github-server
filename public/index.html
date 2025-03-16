@@ -4,16 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MCP GitHub API Client</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 1200px;
+      font-family: 'Roboto', sans-serif;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
       line-height: 1.6;
+      background-color: #f5f7fa;
+      color: #2c3e50;
     }
     h1, h2, h3 {
-      color: #333;
+      color: #34495e;
     }
     .container {
       display: flex;
@@ -22,52 +25,201 @@
     }
     .panel {
       flex: 1;
-      min-width: 300px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      padding: 15px;
+      min-width: 400px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
       margin-bottom: 20px;
     }
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
     label {
       display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #34495e;
     }
     input, textarea, select {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 10px;
+      border: 2px solid #dde1e7;
+      border-radius: 6px;
       box-sizing: border-box;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #3498db;
     }
     textarea {
-      min-height: 100px;
-      font-family: monospace;
+      min-height: 120px;
+      font-family: 'Monaco', monospace;
+      line-height: 1.4;
     }
     button {
-      background-color: #4CAF50;
+      background-color: #3498db;
       color: white;
       border: none;
-      padding: 10px 15px;
-      border-radius: 4px;
+      padding: 12px 20px;
+      border-radius: 6px;
       cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s;
     }
     button:hover {
-      background-color: #45a049;
+      background-color: #2980b9;
     }
-    pre {
-      background-color: #f5f5f5;
-      padding: 10px;
+    .result-container {
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ecf0f1;
+    }
+    .result-status {
+      padding: 5px 10px;
       border-radius: 4px;
-      overflow: auto;
-      max-height: 400px;
+      font-weight: 500;
+      font-size: 14px;
     }
-    .error {
-      color: red;
-      margin-top: 5px;
+    .status-success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .status-error {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .result-content {
+      font-family: 'Monaco', monospace;
+      white-space: pre-wrap;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #dde1e7;
+      max-height: 500px;
+      overflow: auto;
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .result-table th, .result-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #dde1e7;
+    }
+    .result-table th {
+      background-color: #f8f9fa;
+      font-weight: 500;
+      color: #34495e;
+    }
+    .result-table tr:hover {
+      background-color: #f8f9fa;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-private {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .badge-public {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .badge-topic {
+      background-color: #3498db;
+      color: white;
+      margin: 2px;
+    }
+    .repo-info {
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+    }
+    .repo-header {
+      margin-bottom: 20px;
+    }
+    .repo-header h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .repo-header a {
+      color: #2c3e50;
+      text-decoration: none;
+      font-size: 1.2em;
+    }
+    .repo-header a:hover {
+      color: #3498db;
+    }
+    .repo-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #7f8c8d;
+    }
+    .stat-item strong {
+      color: #2c3e50;
+    }
+    .repo-links {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ecf0f1;
+    }
+    .repo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 15px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      color: #2c3e50;
+      text-decoration: none;
+      transition: background-color 0.3s;
+    }
+    .repo-link:hover {
+      background-color: #e9ecef;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -99,7 +251,7 @@
       
       <div id="body-container" class="form-group" style="display: none;">
         <label for="request-body">Тело запроса (JSON):</label>
-        <textarea id="request-body"></textarea>
+        <textarea id="request-body" spellcheck="false"></textarea>
       </div>
       
       <button id="send-request">Отправить запрос</button>
@@ -107,7 +259,13 @@
     
     <div class="panel">
       <h2>Результат</h2>
-      <pre id="result">Здесь будет отображен результат запроса...</pre>
+      <div id="result-container" class="result-container">
+        <div class="result-header">
+          <h3>Ответ сервера</h3>
+          <span id="result-status" class="result-status"></span>
+        </div>
+        <div id="result-content"></div>
+      </div>
     </div>
   </div>
   
@@ -118,7 +276,9 @@
       const bodyContainer = document.getElementById('body-container');
       const requestBodyTextarea = document.getElementById('request-body');
       const sendRequestButton = document.getElementById('send-request');
-      const resultPre = document.getElementById('result');
+      const resultContainer = document.getElementById('result-container');
+      const resultStatus = document.getElementById('result-status');
+      const resultContent = document.getElementById('result-content');
       
       // Шаблоны тел запросов
       const requestBodyTemplates = {
@@ -205,10 +365,173 @@
         paramsContainer.appendChild(formGroup);
       }
       
+      // Функция форматирования результата
+      function formatResult(data) {
+        if (Array.isArray(data)) {
+          // Если это массив репозиториев
+          if (data.length > 0 && data[0].name && data[0].html_url) {
+            return `
+              <table class="result-table">
+                <thead>
+                  <tr>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.map(repo => `
+                    <tr>
+                      <td>${repo.name}</td>
+                      <td>${repo.description || '-'}</td>
+                      <td>
+                        <span class="badge ${repo.private ? 'badge-private' : 'badge-public'}">
+                          ${repo.private ? 'Приватный' : 'Публичный'}
+                        </span>
+                      </td>
+                      <td>
+                        <a href="${repo.html_url}" target="_blank">Открыть</a>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+          }
+          // Если это массив коммитов
+          if (data.length > 0 && data[0].commit) {
+            return `
+              <table class="result-table">
+                <thead>
+                  <tr>
+                    <th>Автор</th>
+                    <th>Сообщение</th>
+                    <th>Дата</th>
+                    <th>SHA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${data.map(commit => `
+                    <tr>
+                      <td>${commit.commit.author.name}</td>
+                      <td>${commit.commit.message}</td>
+                      <td>${new Date(commit.commit.author.date).toLocaleString()}</td>
+                      <td>${commit.sha.substring(0, 7)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+          }
+        }
+        // Если это информация о репозитории
+        else if (data.name && data.html_url) {
+          return `
+            <div class="repo-info">
+              <div class="repo-header">
+                <h3>
+                  <a href="${data.html_url}" target="_blank">${data.full_name}</a>
+                  <span class="badge ${data.private ? 'badge-private' : 'badge-public'}">
+                    ${data.private ? 'Приватный' : 'Публичный'}
+                  </span>
+                </h3>
+              </div>
+              
+              <table class="result-table">
+                <tbody>
+                  <tr>
+                    <th>Описание</th>
+                    <td>${data.description || '-'}</td>
+                  </tr>
+                  <tr>
+                    <th>Язык</th>
+                    <td>${data.language || '-'}</td>
+                  </tr>
+                  <tr>
+                    <th>Создан</th>
+                    <td>${new Date(data.created_at).toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <th>Последнее обновление</th>
+                    <td>${new Date(data.updated_at).toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <th>Размер</th>
+                    <td>${formatSize(data.size)}</td>
+                  </tr>
+                  <tr>
+                    <th>Ветка по умолчанию</th>
+                    <td>${data.default_branch}</td>
+                  </tr>
+                  <tr>
+                    <th>Статистика</th>
+                    <td>
+                      <div class="repo-stats">
+                        <span class="stat-item">
+                          <strong>⭐ ${data.stargazers_count}</strong> звёзд
+                        </span>
+                        <span class="stat-item">
+                          <strong>👁 ${data.watchers_count}</strong> наблюдателей
+                        </span>
+                        <span class="stat-item">
+                          <strong>🔄 ${data.forks_count}</strong> форков
+                        </span>
+                        <span class="stat-item">
+                          <strong>❗ ${data.open_issues_count}</strong> открытых issues
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Лицензия</th>
+                    <td>${data.license ? data.license.name : 'Не указана'}</td>
+                  </tr>
+                  <tr>
+                    <th>Темы</th>
+                    <td>
+                      ${data.topics && data.topics.length > 0 
+                        ? data.topics.map(topic => 
+                            `<span class="badge badge-topic">${topic}</span>`
+                          ).join(' ')
+                        : 'Не указаны'
+                      }
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              ${data.homepage ? `
+                <div class="repo-links">
+                  <a href="${data.homepage}" target="_blank" class="repo-link">
+                    🌐 Веб-сайт проекта
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+        // Для остальных типов данных
+        return `<pre class="result-content">${JSON.stringify(data, null, 2)}</pre>`;
+      }
+      
+      // Функция форматирования размера
+      function formatSize(sizeInKb) {
+        if (sizeInKb < 1024) {
+          return `${sizeInKb} KB`;
+        } else if (sizeInKb < 1024 * 1024) {
+          return `${(sizeInKb / 1024).toFixed(2)} MB`;
+        } else {
+          return `${(sizeInKb / (1024 * 1024)).toFixed(2)} GB`;
+        }
+      }
+      
       // Функция отправки запроса
       async function sendRequest() {
         try {
-          resultPre.textContent = 'Отправка запроса...';
+          resultContent.innerHTML = '<div class="loading"></div>';
+          resultStatus.className = 'result-status';
+          resultStatus.textContent = 'Отправка...';
           
           const selectedEndpoint = endpointSelect.value;
           const [method, pathTemplate] = selectedEndpoint.split(':');
@@ -241,7 +564,9 @@
             try {
               options.body = requestBodyTextarea.value;
             } catch (e) {
-              resultPre.textContent = `Ошибка в формате JSON: ${e.message}`;
+              resultStatus.className = 'result-status status-error';
+              resultStatus.textContent = 'Ошибка';
+              resultContent.innerHTML = `<div class="error">Ошибка в формате JSON: ${e.message}</div>`;
               return;
             }
           }
@@ -251,9 +576,13 @@
           const data = await response.json();
           
           // Отображаем результат
-          resultPre.textContent = JSON.stringify(data, null, 2);
+          resultStatus.className = `result-status ${response.ok ? 'status-success' : 'status-error'}`;
+          resultStatus.textContent = response.ok ? 'Успешно' : 'Ошибка';
+          resultContent.innerHTML = formatResult(data);
         } catch (error) {
-          resultPre.textContent = `Ошибка: ${error.message}`;
+          resultStatus.className = 'result-status status-error';
+          resultStatus.textContent = 'Ошибка';
+          resultContent.innerHTML = `<div class="error">Ошибка: ${error.message}</div>`;
         }
       }
     });
